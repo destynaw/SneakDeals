@@ -1,10 +1,12 @@
 package com.example.sneakdeals.ui.screens.globalchat
 
 import android.speech.tts.TextToSpeech
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,72 +21,50 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.sneakdeals.data.model.allStores
+import com.example.sneakdeals.ui.navigation.Screen
+import com.example.sneakdeals.ui.screens.kategori.Product
+import com.example.sneakdeals.ui.screens.kategori.allProducts
 import com.example.sneakdeals.ui.theme.SneakDealsTheme
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
+enum class MessageType {
+    TEXT,
+    TOP_PRODUCTS
+}
+
 // Data class untuk satu pesan
-data class GlobalMessage(
+data class Message(
     val text: String,
     val isFromUser: Boolean,
-    val timestamp: String
+    val timestamp: String,
+    val type: MessageType = MessageType.TEXT,
+    val products: List<Product> = emptyList()
 )
-
-// Fungsi untuk mendapatkan timestamp saat ini
-private fun getCurrentTimestamp(): String {
-    return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
-}
-
-// Logika Cerdas untuk Chatbot Global
-private fun getBotResponse(userInput: String): String {
-    val lowercasedInput = userInput.lowercase(Locale.ROOT)
-    val cities = allStores.map { it.city.split(": ").last().lowercase(Locale.ROOT) }.distinct()
-    val foundCity = cities.find { city -> lowercasedInput.contains(city) }
-
-    return when {
-        lowercasedInput.contains("toko") || lowercasedInput.contains("store") -> {
-            if (foundCity != null) {
-                val storesInCity = allStores
-                    .filter { it.city.lowercase(Locale.ROOT).contains(foundCity) }
-                    .map { it.name }
-                if (storesInCity.isNotEmpty()) {
-                    "Tentu, kami menemukan beberapa toko di ${foundCity.replaceFirstChar { it.uppercase() }}:\n- ${storesInCity.joinToString("\n- ")}"
-                } else {
-                    "Maaf, kami tidak menemukan toko di ${foundCity.replaceFirstChar { it.uppercase() }}."
-                }
-            } else {
-                "Bisa sebutkan kota yang Anda cari? Misalnya: 'toko di Jakarta'."
-            }
-        }
-        lowercasedInput.contains("halo") || lowercasedInput.contains("hai") -> {
-            "Hai! Ada yang bisa saya bantu? Anda bisa bertanya tentang lokasi toko."
-        }
-        else -> {
-            "Maaf, saya belum mengerti. Anda bisa bertanya tentang lokasi toko, misalnya: 'ada toko di Bandung?'"
-        }
-    }
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GlobalChatScreen(navController: NavController) {
     val messages = remember {
-        mutableStateListOf(GlobalMessage("Hai! Ada yang bisa saya bantu? Tanyakan tentang lokasi toko di seluruh Indonesia.", false, getCurrentTimestamp()))
+        mutableStateListOf(Message("Hai! Ada yang bisa saya bantu? Tanyakan tentang lokasi toko atau produk terlaris!", false, getCurrentTimestamp()))
     }
     var textInput by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    
+
+    // Inisialisasi TextToSpeech
     val context = LocalContext.current
     val textToSpeech = remember {
         TextToSpeech(context, null)
@@ -96,12 +76,39 @@ fun GlobalChatScreen(navController: NavController) {
         }
     }
 
+    fun getBotResponse(userInput: String): Message {
+        val lowercasedInput = userInput.lowercase(Locale.getDefault())
+        return when {
+            "top 10" in lowercasedInput || "paling laku" in lowercasedInput || "terlaris" in lowercasedInput -> {
+                val topProducts = allProducts.sortedByDescending { it.soldCount }.take(10)
+                Message(
+                    text = "Tentu, ini 10 produk terlaris kami saat ini:",
+                    isFromUser = false,
+                    timestamp = getCurrentTimestamp(),
+                    type = MessageType.TOP_PRODUCTS,
+                    products = topProducts
+                )
+            }
+            "toko" in lowercasedInput || "lokasi" in lowercasedInput -> {
+                val foundStore = allStores.find { it.city.lowercase(Locale.getDefault()) in lowercasedInput }
+                if (foundStore != null) {
+                    Message("Toko kami di ${foundStore.city} berada di ${foundStore.address}, buka pada jam ${foundStore.hours}.", false, getCurrentTimestamp())
+                } else {
+                    Message("Untuk informasi lokasi toko, silakan sebutkan kota yang ingin Anda cari, misalnya: 'toko di Bandung'", false, getCurrentTimestamp())
+                }
+            }
+            else -> {
+                Message("Maaf, saya belum mengerti. Anda bisa bertanya tentang 'produk terlaris' atau 'toko di [kota]'.", false, getCurrentTimestamp())
+            }
+        }
+    }
+
     fun handleSendMessage() {
         if (textInput.isNotBlank()) {
             val userMessage = textInput
-            messages.add(GlobalMessage(userMessage, true, getCurrentTimestamp()))
+            messages.add(Message(userMessage, true, getCurrentTimestamp()))
             val botResponse = getBotResponse(userMessage)
-            messages.add(GlobalMessage(botResponse, false, getCurrentTimestamp()))
+            messages.add(botResponse)
             textInput = ""
             coroutineScope.launch {
                 listState.animateScrollToItem(messages.size - 1)
@@ -126,7 +133,11 @@ fun GlobalChatScreen(navController: NavController) {
             )
         },
         bottomBar = {
-            MessageInput(value = textInput, onValueChange = { textInput = it }, onSend = { handleSendMessage() })
+            MessageInput(
+                value = textInput,
+                onValueChange = { textInput = it },
+                onSend = { handleSendMessage() }
+            )
         }
     ) { paddingValues ->
         LazyColumn(
@@ -144,6 +155,9 @@ fun GlobalChatScreen(navController: NavController) {
                     onSpeak = { text ->
                         textToSpeech.language = Locale("id", "ID")
                         textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+                    },
+                    onProductClick = { productId ->
+                        navController.navigate(Screen.ProductDetail.createRoute(productId))
                     }
                 )
             }
@@ -152,15 +166,10 @@ fun GlobalChatScreen(navController: NavController) {
 }
 
 @Composable
-fun MessageBubble(message: GlobalMessage, onSpeak: (String) -> Unit) {
+fun MessageBubble(message: Message, onSpeak: (String) -> Unit, onProductClick: (String) -> Unit) {
     val alignment = if (message.isFromUser) Alignment.CenterEnd else Alignment.CenterStart
-    val backgroundColor = if (message.isFromUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer
-    val textColor = if (message.isFromUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer
-    val bubbleShape = if (message.isFromUser) {
-        RoundedCornerShape(20.dp, 4.dp, 20.dp, 20.dp)
-    } else {
-        RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp)
-    }
+    val bubbleShape = if (message.isFromUser) RoundedCornerShape(20.dp, 4.dp, 20.dp, 20.dp)
+                      else RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp)
 
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -168,28 +177,39 @@ fun MessageBubble(message: GlobalMessage, onSpeak: (String) -> Unit) {
     ) {
         Column(
             horizontalAlignment = if (message.isFromUser) Alignment.End else Alignment.Start,
-            modifier = Modifier.widthIn(max = 300.dp)
+            modifier = if(message.type == MessageType.TEXT) Modifier.widthIn(max = 300.dp) else Modifier.fillMaxWidth()
         ) {
-             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (!message.isFromUser) {
-                    Icon(
-                        imageVector = Icons.Default.VolumeUp,
-                        contentDescription = "Dengarkan pesan",
+             val backgroundColor = if (message.isFromUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer
+             val textColor = if (message.isFromUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer
+
+            if (message.text.isNotEmpty()) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (!message.isFromUser) {
+                        Icon(
+                            imageVector = Icons.Default.VolumeUp,
+                            contentDescription = "Dengarkan pesan",
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clickable { onSpeak(message.text) },
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                    Box(
                         modifier = Modifier
-                            .size(20.dp)
-                            .clickable { onSpeak(message.text) },
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .clip(bubbleShape)
-                        .background(backgroundColor)
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
-                ) {
-                    Text(message.text, color = textColor)
+                            .clip(bubbleShape)
+                            .background(backgroundColor)
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Text(message.text, color = textColor)
+                    }
                 }
             }
+
+            if (message.type == MessageType.TOP_PRODUCTS) {
+                Spacer(modifier = Modifier.height(12.dp))
+                TopProductsCarousel(products = message.products, onProductClick = onProductClick)
+            }
+            
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 message.timestamp,
@@ -200,6 +220,65 @@ fun MessageBubble(message: GlobalMessage, onSpeak: (String) -> Unit) {
         }
     }
 }
+
+@Composable
+fun TopProductsCarousel(products: List<Product>, onProductClick: (String) -> Unit) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp) // Added vertical padding
+    ) {
+        items(products) { product ->
+            ProductCarouselItem(product = product, onClick = { onProductClick(product.id) })
+        }
+    }
+}
+
+@Composable
+fun ProductCarouselItem(product: Product, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .width(150.dp)
+            .height(230.dp) // Set a fixed height for the entire card
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column {
+            Image(
+                painter = painterResource(id = product.imageRes),
+                contentDescription = product.name,
+                modifier = Modifier
+                    .height(120.dp)
+                    .fillMaxWidth(),
+                contentScale = ContentScale.Crop
+            )
+            Column(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .fillMaxHeight(), // Allow this column to fill the remaining height
+                verticalArrangement = Arrangement.SpaceBetween // Pushes name to top, price to bottom
+            ) {
+                Text(
+                    text = product.name,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2, 
+                    minLines = 2, // Reserve space for 2 lines to ensure alignment
+                    overflow = TextOverflow.Ellipsis,
+                    fontSize = 14.sp,
+                    lineHeight = 18.sp
+                )
+                Text(
+                    text = "Rp${String.format("%,.0f", product.price)}",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
+                )
+            }
+        }
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -216,7 +295,7 @@ fun MessageInput(value: String, onValueChange: (String) -> Unit, onSend: () -> U
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Tanya lokasi toko...") },
+                placeholder = { Text("Tanya lokasi atau produk...") },
                 shape = RoundedCornerShape(24.dp),
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
@@ -239,6 +318,10 @@ fun MessageInput(value: String, onValueChange: (String) -> Unit, onSend: () -> U
             }
         }
     }
+}
+
+fun getCurrentTimestamp(): String {
+    return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
 }
 
 @Preview(showBackground = true)

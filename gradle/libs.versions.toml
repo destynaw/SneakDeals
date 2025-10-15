@@ -11,7 +11,7 @@ composeBom = "2024.09.00"
 navigationCompose = "2.8.0-beta05"
 
 # -- VERSI FIREBASE SAYA TAMBAHKAN DI SINI --
-googleServices = "4.4.2"
+googleServices = "4.4.4"
 firebaseBom = "33.1.2"
 # ----------------------------------------
 

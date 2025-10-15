@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -103,15 +104,45 @@ fun BerandaScreen(navController: NavController) {
                 }
 
             } else {
-                // Default home view - Restored
+                // Default home view
                 item { QuickCategoriesSection(navController) }
-                item { MegaSaleBanner(onClick = { navController.navigate(Screen.ProductList.createRoute("Diskon Besar")) }) }
+                item { SneakLaunchBanner(onClick = { navController.navigate(Screen.SneakLaunch.route) }) }
                 item { StorePromoBanner(navController) }
                 item { JoinNowBanner(navController) }
             }
         }
     }
 }
+
+@Composable
+fun SneakLaunchBanner(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.large,
+    ) {
+        Box(modifier = Modifier.height(180.dp)) {
+            Image(
+                painter = painterResource(id = R.drawable.speedcat_galaxy), // A cool, futuristic image
+                contentDescription = "SneakLaunch Banner", 
+                contentScale = ContentScale.Crop, 
+                modifier = Modifier.fillMaxSize()
+            )
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f)))
+            Column(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                Text("SNEAKLAUNCH", style = MaterialTheme.typography.labelLarge, color = Color.White.copy(alpha=0.8f), letterSpacing = 2.sp)
+                Spacer(Modifier.height(4.dp))
+                Text("Wujudkan Desain Sepatu Impianmu", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                Spacer(Modifier.height(8.dp))
+                Text("Dukung & miliki produk edisi terbatas →", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+            }
+        }
+    }
+}
+
 
 @Composable
 fun ProductCard(product: Product, modifier: Modifier = Modifier, navController: NavController) {
@@ -194,30 +225,6 @@ fun JoinNowBanner(navController: NavController) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text("Join Now SneakDeals", color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
-        }
-    }
-}
-
-
-@Composable
-fun MegaSaleBanner(onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.large,
-    ) {
-        Box(modifier = Modifier.height(180.dp)) {
-            Image(painter = painterResource(id = R.drawable.speedcat_red), contentDescription = "Mega Sale Banner", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)))
-            Column(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text("MEGA SALE: BELI 1\nGRATIS 1!", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = Color.White, textAlign = TextAlign.Center)
-                Text("Plus Diskon Super Besar!", style = MaterialTheme.typography.titleMedium, color = Color.White)
-                Spacer(Modifier.height(4.dp))
-                Text("S&K Berlaku", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
-            }
         }
     }
 }

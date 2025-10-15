@@ -9,6 +9,7 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Wishlist : Screen("wishlist")
     object Cart : Screen("cart")
+    object SneakLaunch : Screen("sneak_launch")
 
     object ProductDetail : Screen("product_detail/{productId}") {
         fun createRoute(productId: String) = "product_detail/$productId"
@@ -29,7 +30,4 @@ sealed class Screen(val route: String) {
     object ProductList : Screen("product_list/{categoryName}") {
         fun createRoute(categoryName: String) = "product_list/$categoryName"
     }
-    
-    // Route for the new Mega Sale screen
-    object MegaSale : Screen("mega_sale")
 }

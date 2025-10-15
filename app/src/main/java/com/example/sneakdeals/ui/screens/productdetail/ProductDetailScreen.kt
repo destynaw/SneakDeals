@@ -35,6 +35,18 @@ import com.example.sneakdeals.ui.screens.kategori.Product
 import com.example.sneakdeals.ui.screens.kategori.allProducts
 import com.example.sneakdeals.ui.theme.SneakDealsTheme
 
+private fun formatSoldCount(count: Int): String {
+    if (count <= 0) return ""
+    return when {
+        count >= 1000 -> {
+            val formatted = String.format(java.util.Locale.US, "%.1f", count / 1000.0)
+            val cleanValue = if (formatted.endsWith(".0")) formatted.substring(0, formatted.length - 2) else formatted
+            "${cleanValue}rb terjual"
+        }
+        else -> "$count terjual"
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ProductDetailScreen(product: Product, navController: NavController) {
@@ -107,27 +119,83 @@ fun ProductImage(product: Product) {
 
 @Composable
 fun ProductInfo(product: Product) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        Text("PUMA", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
-        Spacer(Modifier.height(4.dp))
-        Text(product.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(4.dp))
-        Text("Kode Produk: ${product.productCode}", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-        Spacer(Modifier.height(12.dp))
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Rp${String.format("%,.0f", product.price)}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            if (product.originalPrice != null) {
-                val discountPercent = ((product.originalPrice - product.price) / product.originalPrice * 100).toInt()
-                Badge(containerColor = Color.Red.copy(alpha = 0.1f)) {
-                    Text("$discountPercent%", color = Color.Red, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp) // Consistent spacing
+    ) {
+        // --- Top Row: Brand and Sold Count ---
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "PUMA", // Assuming brand is always PUMA for now
+                style = MaterialTheme.typography.labelLarge,
+                color = Color.Gray,
+                fontWeight = FontWeight.SemiBold
+            )
+            if (product.soldCount > 0) {
+                Text(
+                    text = formatSoldCount(product.soldCount),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
             }
         }
-        if (product.originalPrice != null) {
-            Text("Rp${String.format("%,.0f", product.originalPrice)}", style = TextStyle(textDecoration = TextDecoration.LineThrough), color = Color.Gray, fontSize = 14.sp)
+
+        // --- Product Name and Code ---
+        Text(
+            text = product.name,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "Kode Produk: ${product.productCode}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Gray
+        )
+
+        Spacer(Modifier.height(8.dp)) // Extra space before price
+
+        // --- Price Section ---
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Rp${String.format("%,.0f", product.price)}",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                if (product.originalPrice != null) {
+                    val discountPercent = ((product.originalPrice - product.price) / product.originalPrice * 100).toInt()
+                    Badge(containerColor = Color.Red.copy(alpha = 0.1f)) {
+                        Text(
+                            text = "$discountPercent%",
+                            color = Color.Red,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            if (product.originalPrice != null) {
+                Text(
+                    text = "Rp${String.format("%,.0f", product.originalPrice)}",
+                    style = TextStyle(textDecoration = TextDecoration.LineThrough),
+                    color = Color.Gray,
+                    fontSize = 16.sp
+                )
+            }
         }
     }
 }
+
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -208,6 +276,6 @@ fun ProductDetailBottomBar(product: Product) {
 @Composable
 fun ProductDetailScreenPreview() {
     SneakDealsTheme {
-        ProductDetailScreen(product = allProducts.first(), navController = rememberNavController())
+        ProductDetailScreen(product = allProducts.first { it.originalPrice != null }, navController = rememberNavController())
     }
 }

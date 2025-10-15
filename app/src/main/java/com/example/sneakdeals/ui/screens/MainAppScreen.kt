@@ -23,10 +23,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.sneakdeals.data.model.allStores
 import com.example.sneakdeals.ui.navigation.Screen
+import com.example.sneakdeals.ui.screens.SneakLaunchScreen
 import com.example.sneakdeals.ui.screens.akun.AccountScreen
 import com.example.sneakdeals.ui.screens.beranda.AllDealsScreen
 import com.example.sneakdeals.ui.screens.beranda.BerandaScreen
-import com.example.sneakdeals.ui.screens.beranda.MegaSaleScreen
 import com.example.sneakdeals.ui.screens.cart.CartScreen
 import com.example.sneakdeals.ui.screens.chat.ChatScreen
 import com.example.sneakdeals.ui.screens.globalchat.GlobalChatScreen
@@ -96,7 +96,7 @@ fun MainAppScreen(modifier: Modifier = Modifier) {
                 }
             }
             composable(Screen.Chat.route) {
-                val storeId = it.arguments?.getString("storeId")
+                 val storeId = it.arguments?.getString("storeId")
                 val store = allStores.find { s -> s.id == storeId }
                 if (store != null) {
                     ChatScreen(store = store, navController = navController)
@@ -112,8 +112,8 @@ fun MainAppScreen(modifier: Modifier = Modifier) {
                 val categoryName = it.arguments?.getString("categoryName")
                 ProductListScreen(navController = navController, categoryName = categoryName)
             }
-            composable(Screen.MegaSale.route) {
-                MegaSaleScreen(navController = navController)
+            composable(Screen.SneakLaunch.route) {
+                SneakLaunchScreen(navController = navController)
             }
         }
     }

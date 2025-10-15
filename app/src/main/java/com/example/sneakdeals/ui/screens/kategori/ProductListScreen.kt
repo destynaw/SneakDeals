@@ -45,21 +45,33 @@ data class Product(
     val originalPrice: Double? = null,
     @DrawableRes val imageRes: Int,
     val category: String,
-    val gender: String // "Men", "Women", "Unisex"
+    val gender: String, // "Men", "Women", "Unisex"
+    val soldCount: Int
 )
 
 // --- MASTER PRODUCT LIST WITH FULL DETAILS ---
 val allProducts = listOf(
-    Product("cl1", "Puma Suede Classic XXI", "PS001", "The Suede hit the scene in 1968 and has been changing the game ever since. It’s been worn by icons of every generation – and it’s stayed classic through it all. This year, we relaunch the Suede with fresh colorways and subtle design updates. Classic as ever, for all-time.", listOf("39", "40", "41", "42", "43"), 999000.0, 1299000.0, R.drawable.speedcat_grey, "Classics", "Men"),
-    Product("run1", "Speedcat Running Red", "RN001", "A lightweight and responsive running shoe, perfect for your daily miles. Features a breathable mesh upper and ProFoam Lite midsole for ultimate cushioning.", listOf("40", "41", "42", "43", "44"), 850000.0, 1100000.0, R.drawable.speedcat_red, "Running", "Men"),
-    Product("run2", "Speedcat Running Blue Pink", "RN002", "A stylish running shoe for women, combining performance with a standout look. The SoftFoam+ sockliner provides superior comfort for every step of your day.", listOf("37", "38", "39", "40"), 899000.0, 1150000.0, R.drawable.speedcat_bluepink, "Running", "Women"),
-    Product("run3", "Speedcat Galaxy", "RN003", "Explore the city in comfort. These running-inspired sneakers feature a sleek design and a cushioned feel that lasts all day.", listOf("39", "40", "41", "42"), 920000.0, 1200000.0, R.drawable.speedcat_galaxy, "Running", "Unisex"),
-    Product("fb1", "Speedcat Football", "FB001", "Dominate the pitch with these football boots, engineered for speed and precision. The lightweight upper provides a barefoot feel for ultimate ball control.", listOf("41", "42", "43"), 950000.0, 1250000.0, R.drawable.speedcat_football0, "Football", "Men"),
-    Product("cl2", "Puma ROMA", "CL002", "A classic from the PUMA archives, the Roma is a lightweight training shoe equipped with comfort-enhancing features such as a thick padded tongue and orthopedic arch supports.", listOf("38", "39", "40", "41", "42", "43"), 899000.0, null, R.drawable.puma_boys1, "Classics", "Unisex"),
-    Product("run4", "Deviate NITRO 2", "RN004", "The Deviate NITRO™ 2 is a max-cushioned, max-performance running shoe that makes going faster even easier. It’s the perfect choice for high-mileage runs.", listOf("40", "41", "42", "43"), 1500000.0, 2100000.0, R.drawable.puma_boys10, "Running", "Men"),
-    Product("ls1", "Puma CA Pro Classic", "LS001", "The CA Pro Classic features a clean, court-inspired silhouette with a stacked midsole and premium leather upper. A modern classic for any look.", listOf("39", "40", "41", "42", "43", "44"), 1100000.0, null, R.drawable.puma_boys12, "Lifestyle", "Men")
+    Product("cl1", "Puma Suede Classic XXI", "PS001", "The Suede hit the scene in 1968 and has been changing the game ever since. It’s been worn by icons of every generation – and it’s stayed classic through it all. This year, we relaunch the Suede with fresh colorways and subtle design updates. Classic as ever, for all-time.", listOf("39", "40", "41", "42", "43"), 999000.0, 1299000.0, R.drawable.speedcat_grey, "Classics", "Men", soldCount = 12500),
+    Product("run1", "Speedcat Running Red", "RN001", "A lightweight and responsive running shoe, perfect for your daily miles. Features a breathable mesh upper and ProFoam Lite midsole for ultimate cushioning.", listOf("40", "41", "42", "43", "44"), 850000.0, 1100000.0, R.drawable.speedcat_red, "Running", "Men", soldCount = 5200),
+    Product("run2", "Speedcat Running Blue Pink", "RN002", "A stylish running shoe for women, combining performance with a standout look. The SoftFoam+ sockliner provides superior comfort for every step of your day.", listOf("37", "38", "39", "40"), 899000.0, 1150000.0, R.drawable.speedcat_bluepink, "Running", "Women", soldCount = 3800),
+    Product("run3", "Speedcat Galaxy", "RN003", "Explore the city in comfort. These running-inspired sneakers feature a sleek design and a cushioned feel that lasts all day.", listOf("39", "40", "41", "42"), 920000.0, 1200000.0, R.drawable.speedcat_galaxy, "Running", "Unisex", soldCount = 4100),
+    Product("fb1", "Speedcat Football", "FB001", "Dominate the pitch with these football boots, engineered for speed and precision. The lightweight upper provides a barefoot feel for ultimate ball control.", listOf("41", "42", "43"), 950000.0, 1250000.0, R.drawable.speedcat_football0, "Football", "Men", soldCount = 1800),
+    Product("cl2", "Puma ROMA", "CL002", "A classic from the PUMA archives, the Roma is a lightweight training shoe equipped with comfort-enhancing features such as a thick padded tongue and orthopedic arch supports.", listOf("38", "39", "40", "41", "42", "43"), 899000.0, null, R.drawable.puma_boys1, "Classics", "Unisex", soldCount = 8300),
+    Product("run4", "Deviate NITRO 2", "RN004", "The Deviate NITRO™ 2 is a max-cushioned, max-performance running shoe that makes going faster even easier. It’s the perfect choice for high-mileage runs.", listOf("40", "41", "42", "43"), 1500000.0, 2100000.0, R.drawable.puma_boys10, "Running", "Men", soldCount = 2600),
+    Product("ls1", "Puma CA Pro Classic", "LS001", "The CA Pro Classic features a clean, court-inspired silhouette with a stacked midsole and premium leather upper. A modern classic for any look.", listOf("39", "40", "41", "42", "43", "44"), 1100000.0, null, R.drawable.puma_boys12, "Lifestyle", "Men", soldCount = 7800)
 )
 
+private fun formatSoldCount(count: Int): String {
+    if (count <= 0) return ""
+    return when {
+        count >= 1000 -> {
+            val formatted = String.format(java.util.Locale.US, "%.1f", count / 1000.0)
+            val cleanValue = if (formatted.endsWith(".0")) formatted.substring(0, formatted.length - 2) else formatted
+            "${cleanValue}rb terjual"
+        }
+        else -> "$count terjual"
+    }
+}
 
 // --- MAIN SCREEN ---
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -90,6 +102,7 @@ fun ProductListScreen(navController: NavController, categoryName: String?) {
             when (selectedSort) {
                 "Termurah" -> genderFiltered.sortedBy { it.price }
                 "Termahal" -> genderFiltered.sortedByDescending { it.price }
+                "Populer" -> genderFiltered.sortedByDescending { it.soldCount }
                 else -> genderFiltered // "Relevansi"
             }
         }
@@ -259,7 +272,7 @@ fun SortFilterControls(onSortClick: () -> Unit, onFilterClick: () -> Unit) {
 
 @Composable
 fun SortOptionsSheet(selectedOption: String, onOptionSelected: (String) -> Unit) {
-    val sortOptions = listOf("Relevansi", "Termurah", "Termahal")
+    val sortOptions = listOf("Relevansi", "Populer", "Termurah", "Termahal")
     Column(modifier = Modifier.padding(bottom = 32.dp)) {
         Text("Urutkan Berdasarkan", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp))
         sortOptions.forEach { option ->
@@ -310,13 +323,32 @@ fun ProductListItem(product: Product, onClick: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(product.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                 Text(product.productCode, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-                Text("Rp${String.format("%,.0f", product.price)}", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
                 if (product.originalPrice != null) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                     Row(verticalAlignment = Alignment.CenterVertically) {
                         val discount = ((product.originalPrice - product.price) / product.originalPrice * 100).toInt()
                         Text(text = "Rp${String.format("%,.0f", product.originalPrice)}", textDecoration = TextDecoration.LineThrough, fontSize = 12.sp, color = Color.Gray)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("($discount%)", color = Color.Red, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    Spacer(modifier = Modifier.height(16.dp)) // Placeholder for spacing when there is no discount
+                }
+                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Rp${String.format("%,.0f", product.price)}", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    if (product.soldCount > 0) {
+                        Divider(
+                            modifier = Modifier
+                                .height(12.dp)
+                                .width(1.dp),
+                            color = Color.Gray.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = formatSoldCount(product.soldCount),
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
                     }
                 }
             }

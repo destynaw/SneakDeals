@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "720971722490",
-    "project_id": "temuapp-2acae",
-    "storage_bucket": "temuapp-2acae.firebasestorage.app"
+    "project_number": "978693192239",
+    "project_id": "sneakdeals-cb9c3",
+    "storage_bucket": "sneakdeals-cb9c3.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:720971722490:android:0518f9a2bcb3adb6fd2343",
+        "mobilesdk_app_id": "1:978693192239:android:89c953c90de1cb360e64da",
         "android_client_info": {
           "package_name": "com.example.sneakdeals"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCapZDyQPHywqpQS9zOPr7IDPGhNvSq5RY"
+          "current_key": "AIzaSyDJrQ7cTq_AW2MLvXeG485dhwxXSfcKJwA"
         }
       ],
       "services": {
